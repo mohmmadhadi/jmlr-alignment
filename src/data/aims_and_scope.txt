@@ -1,0 +1,15 @@
+The Journal of Machine Learning Research (JMLR) provides an international 
+forum for the electronic and paper publication of high-quality scholarly 
+articles in all areas of machine learning. All published papers are freely 
+available online. JMLR has a commitment to rigorous yet rapid reviewing.
+
+JMLR seeks previously unpublished papers on machine learning that contain:
+- Novel principled machine learning algorithms and their applications
+- Analysis of algorithms and the computational complexity of learning
+- Studies on the statistical aspects of learning, including consistency and rates of convergence
+- Papers that bridge machine learning and statistics, computational complexity, or other fields
+- Experimental and theoretical work on neural networks, kernel methods, Bayesian approaches
+- Reinforcement learning, unsupervised learning, supervised learning
+- Representation learning, deep learning, optimization for machine learning
+- Fairness, robustness, and interpretability in machine learning systems
+- Applications of machine learning to real-world problems
