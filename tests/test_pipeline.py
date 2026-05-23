@@ -129,3 +129,38 @@ class TestOutlierDetection:
         df = pd.DataFrame({"title": ["A"], "sbert_alignment_score": [0.3]})
         self.evaluator.detect_outliers(df)
         assert "outlier_type" not in df.columns
+
+
+from src.models.umap_projector import UMAPProjector
+
+class TestUMAPProjector:
+    """Unit tests for the UMAPProjector class."""
+
+    def test_output_shape(self) -> None:
+        embeddings = np.random.rand(50, 384)
+        projector = UMAPProjector(n_neighbors=5, random_state=42)
+        result = projector.fit_transform(embeddings)
+        assert result.shape == (50, 2)
+
+    def test_attach_coordinates_adds_columns(self) -> None:
+        embeddings = np.random.rand(50, 384)
+        projector = UMAPProjector(n_neighbors=5, random_state=42)
+        projector.fit_transform(embeddings)
+        df = pd.DataFrame({"title": [f"Paper {i}" for i in range(50)]})
+        result = projector.attach_coordinates(df)
+        assert "umap_x" in result.columns
+        assert "umap_y" in result.columns
+
+    def test_attach_before_fit_raises(self) -> None:
+        projector = UMAPProjector()
+        df = pd.DataFrame({"title": ["A"]})
+        with pytest.raises(RuntimeError):
+            projector.attach_coordinates(df)
+
+    def test_does_not_mutate_original(self) -> None:
+        embeddings = np.random.rand(50, 384)
+        projector = UMAPProjector(n_neighbors=5, random_state=42)
+        projector.fit_transform(embeddings)
+        df = pd.DataFrame({"title": [f"Paper {i}" for i in range(50)]})
+        projector.attach_coordinates(df)
+        assert "umap_x" not in df.columns
