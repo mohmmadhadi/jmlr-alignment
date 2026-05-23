@@ -56,3 +56,35 @@ class AlignmentEvaluator:
         df = df.copy()
         df[col] = scores
         return df
+
+    def detect_outliers(
+            self,
+            df: pd.DataFrame,
+            score_col: str = "sbert_alignment_score",
+            threshold: float = 2.0,
+    ) -> pd.DataFrame:
+        """Flag papers as outliers if their score deviates beyond a std dev threshold.
+
+        Args:
+            df: DataFrame with alignment scores attached.
+            score_col: Name of the score column to evaluate.
+            threshold: Number of standard deviations from the mean to use as cutoff.
+
+        Returns:
+            DataFrame with three new columns:
+                - score_mean: corpus mean alignment score
+                - score_std: corpus standard deviation
+                - outlier_type: 'high', 'low', or None
+        """
+        mean = df[score_col].mean()
+        std = df[score_col].std()
+
+        df = df.copy()
+        df["score_mean"] = mean
+        df["score_std"] = std
+
+        df["outlier_type"] = None
+        df.loc[df[score_col] > mean + threshold * std, "outlier_type"] = "high"
+        df.loc[df[score_col] < mean - threshold * std, "outlier_type"] = "low"
+
+        return df

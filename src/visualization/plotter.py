@@ -260,3 +260,57 @@ def plot_topic_year_heatmap(
     else:
         plt.show()
     plt.close()
+
+
+def plot_outlier_distribution(
+    df: pd.DataFrame,
+    save_path: Optional[str] = None,
+) -> None:
+    """Histogram with std dev threshold bands and flagged outliers marked.
+
+    Args:
+        df: DataFrame with sbert_alignment_score and outlier_type columns.
+        save_path: If provided, save figure to this path.
+    """
+    mean = df["score_mean"].iloc[0]
+    std = df["score_std"].iloc[0]
+    upper = mean + 2 * std
+    lower = mean - 2 * std
+
+    fig, ax = plt.subplots(figsize=(11, 5))
+
+    ax.hist(df["sbert_alignment_score"], bins=40, color="#4C72B0", alpha=0.7,
+            edgecolor="white", label="All papers")
+
+    high = df[df["outlier_type"] == "high"]["sbert_alignment_score"]
+    low = df[df["outlier_type"] == "low"]["sbert_alignment_score"]
+
+    if not high.empty:
+        ax.hist(high, bins=40, color="#2ca02c", alpha=0.9,
+                edgecolor="white", label=f"High outliers (n={len(high)})")
+    if not low.empty:
+        ax.hist(low, bins=40, color="#d62728", alpha=0.9,
+                edgecolor="white", label=f"Low outliers (n={len(low)})")
+
+    ax.axvline(mean, color="black", linestyle="-", linewidth=1.5,
+               label=f"Mean: {mean:.3f}")
+    ax.axvline(upper, color="green", linestyle="--", linewidth=1.5,
+               label=f"+2σ: {upper:.3f}")
+    ax.axvline(lower, color="red", linestyle="--", linewidth=1.5,
+               label=f"−2σ: {lower:.3f}")
+
+    ax.fill_betweenx([0, ax.get_ylim()[1] if ax.get_ylim()[1] > 0 else 60],
+                     lower, upper, alpha=0.05, color="gray", label="±2σ band")
+
+    ax.set_xlabel("SBERT alignment score")
+    ax.set_ylabel("Number of papers")
+    ax.set_title("JMLR — Alignment score distribution with outlier thresholds (±2σ)", fontsize=13)
+    ax.legend(fontsize=9)
+    plt.tight_layout()
+
+    if save_path:
+        plt.savefig(save_path, dpi=150, bbox_inches="tight")
+        print(f"Saved: {save_path}")
+    else:
+        plt.show()
+    plt.close()

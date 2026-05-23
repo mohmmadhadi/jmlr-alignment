@@ -92,3 +92,40 @@ class TestAlignmentEvaluator:
         with pytest.raises(Exception):
             ev = AlignmentEvaluator(self.scope, np.array([]))
             ev.compute_scores()
+
+
+class TestOutlierDetection:
+    """Unit tests for the detect_outliers method."""
+
+    def setup_method(self) -> None:
+        scope = np.array([1.0, 0.0, 0.0])
+        abstracts = np.array([[1.0, 0.0, 0.0]] * 10)
+        self.evaluator = AlignmentEvaluator(scope, abstracts)
+
+    def test_outlier_columns_added(self) -> None:
+        scores = np.array([0.1, 0.2, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.9])
+        df = pd.DataFrame({"title": [f"Paper {i}" for i in range(10)]})
+        df["sbert_alignment_score"] = scores
+        result = self.evaluator.detect_outliers(df)
+        assert "outlier_type" in result.columns
+        assert "score_mean" in result.columns
+        assert "score_std" in result.columns
+
+    def test_high_outlier_flagged(self) -> None:
+        scores = np.array([0.3] * 9 + [0.99])
+        df = pd.DataFrame({"title": [f"Paper {i}" for i in range(10)]})
+        df["sbert_alignment_score"] = scores
+        result = self.evaluator.detect_outliers(df, threshold=2.0)
+        assert result.iloc[-1]["outlier_type"] == "high"
+
+    def test_low_outlier_flagged(self) -> None:
+        scores = np.array([-0.5] + [0.3] * 9)
+        df = pd.DataFrame({"title": [f"Paper {i}" for i in range(10)]})
+        df["sbert_alignment_score"] = scores
+        result = self.evaluator.detect_outliers(df, threshold=2.0)
+        assert result.iloc[0]["outlier_type"] == "low"
+
+    def test_no_mutation_of_original(self) -> None:
+        df = pd.DataFrame({"title": ["A"], "sbert_alignment_score": [0.3]})
+        self.evaluator.detect_outliers(df)
+        assert "outlier_type" not in df.columns

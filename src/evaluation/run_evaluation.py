@@ -31,21 +31,36 @@ def run() -> None:
     df.to_csv("data/processed/jmlr_papers_scored.csv", index=False)
     print(f"\nSaved scored dataset to data/processed/jmlr_papers_scored.csv")
 
-    # --- Print summary statistics ---
-    for prefix in ["tfidf_", "sbert_"]:
-        col = f"{prefix}alignment_score"
-        print(f"\n{col} summary:")
-        print(f"  mean:   {df[col].mean():.4f}")
-        print(f"  std:    {df[col].std():.4f}")
-        print(f"  min:    {df[col].min():.4f}")
-        print(f"  max:    {df[col].max():.4f}")
+    # --- Outlier detection ---
 
-    # --- Print top and bottom 5 papers by SBERT score ---
-    for label, ascending in [("Bottom 5 (lowest alignment)", True), ("Top 5 (highest alignment)", False)]:
-        print(f"\n{label}:")
-        subset = df.sort_values("sbert_alignment_score", ascending=ascending).head(5)
-        for _, row in subset.iterrows():
-            print(f"  [{row['sbert_alignment_score']:.4f}] {row['title'][:80]}")
+
+    print("\nDetecting outliers (±2 std dev threshold)...")
+    df = sbert_eval.detect_outliers(df, score_col="sbert_alignment_score", threshold=2.0)
+
+    n_high = (df["outlier_type"] == "high").sum()
+    n_low = (df["outlier_type"] == "low").sum()
+    mean = df["score_mean"].iloc[0]
+    std = df["score_std"].iloc[0]
+
+    print(f"  Corpus mean:  {mean:.4f}")
+    print(f"  Corpus std:   {std:.4f}")
+    print(f"  Upper bound:  {mean + 2 * std:.4f}  →  {n_high} high outliers")
+    print(f"  Lower bound:  {mean - 2 * std:.4f}  →  {n_low} low outliers")
+
+    df.to_csv("data/processed/jmlr_papers_scored.csv", index=False)
+    print("\nUpdated scored CSV with outlier flags.")
+
+    print("\nHigh outliers (above mean + 2σ):")
+    high = df[df["outlier_type"] == "high"].sort_values("sbert_alignment_score", ascending=False)
+    for _, row in high.iterrows():
+        print(f"  [{row['sbert_alignment_score']:.4f}] {row['title'][:75]}")
+
+    print("\nLow outliers (below mean − 2σ):")
+    low = df[df["outlier_type"] == "low"].sort_values("sbert_alignment_score")
+    for _, row in low.iterrows():
+        print(f"  [{row['sbert_alignment_score']:.4f}] {row['title'][:75]}")
+
+
 
 
 if __name__ == "__main__":
