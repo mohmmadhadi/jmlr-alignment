@@ -314,3 +314,143 @@ def plot_outlier_distribution(
     else:
         plt.show()
     plt.close()
+
+
+def plot_umap_by_topic(
+    df: pd.DataFrame,
+    save_path: Optional[str] = None,
+) -> None:
+    """UMAP scatter plot with points colored by BERTopic topic label.
+
+    Args:
+        df: DataFrame with umap_x, umap_y, topic_id, topic_label columns.
+        save_path: If provided, save figure to this path.
+    """
+    fig, ax = plt.subplots(figsize=(13, 8))
+
+    noise = df[df["topic_id"] == -1]
+    ax.scatter(
+        noise["umap_x"], noise["umap_y"],
+        c="lightgrey", s=18, alpha=0.4, linewidths=0,
+        label="noise (topic −1)",
+    )
+
+    topics = df[df["topic_id"] != -1]
+    palette = sns.color_palette("tab10", n_colors=topics["topic_id"].nunique())
+    for i, (tid, group) in enumerate(topics.groupby("topic_id")):
+        label = group["topic_label"].iloc[0]
+        short = label[:35] + "…" if len(label) > 35 else label
+        ax.scatter(
+            group["umap_x"], group["umap_y"],
+            color=palette[i], s=28, alpha=0.8, linewidths=0,
+            label=f"{tid}: {short}",
+        )
+
+    ax.set_title("JMLR — UMAP projection colored by topic", fontsize=14)
+    ax.set_xlabel("UMAP dimension 1")
+    ax.set_ylabel("UMAP dimension 2")
+    ax.legend(
+        bbox_to_anchor=(1.01, 1), loc="upper left",
+        fontsize=8, frameon=False,
+    )
+    plt.tight_layout()
+
+    if save_path:
+        plt.savefig(save_path, dpi=150, bbox_inches="tight")
+        print(f"Saved: {save_path}")
+    else:
+        plt.show()
+    plt.close()
+
+
+def plot_umap_by_alignment(
+    df: pd.DataFrame,
+    save_path: Optional[str] = None,
+) -> None:
+    """UMAP scatter plot with points colored by SBERT alignment score.
+
+    Args:
+        df: DataFrame with umap_x, umap_y, sbert_alignment_score columns.
+        save_path: If provided, save figure to this path.
+    """
+    fig, ax = plt.subplots(figsize=(11, 7))
+
+    sc = ax.scatter(
+        df["umap_x"], df["umap_y"],
+        c=df["sbert_alignment_score"],
+        cmap="RdYlGn",
+        s=28, alpha=0.85, linewidths=0,
+        vmin=df["sbert_alignment_score"].quantile(0.05),
+        vmax=df["sbert_alignment_score"].quantile(0.95),
+    )
+
+    outliers_low = df[df["outlier_type"] == "low"] if "outlier_type" in df.columns else pd.DataFrame()
+    outliers_high = df[df["outlier_type"] == "high"] if "outlier_type" in df.columns else pd.DataFrame()
+
+    if not outliers_low.empty:
+        ax.scatter(
+            outliers_low["umap_x"], outliers_low["umap_y"],
+            edgecolors="red", facecolors="none",
+            s=80, linewidths=1.5, label="Low outlier (−2σ)",
+        )
+    if not outliers_high.empty:
+        ax.scatter(
+            outliers_high["umap_x"], outliers_high["umap_y"],
+            edgecolors="green", facecolors="none",
+            s=80, linewidths=1.5, label="High outlier (+2σ)",
+        )
+
+    plt.colorbar(sc, ax=ax, label="SBERT alignment score", shrink=0.7)
+    ax.set_title("JMLR — UMAP projection colored by alignment score", fontsize=14)
+    ax.set_xlabel("UMAP dimension 1")
+    ax.set_ylabel("UMAP dimension 2")
+    if not outliers_low.empty or not outliers_high.empty:
+        ax.legend(fontsize=9, frameon=False)
+    plt.tight_layout()
+
+    if save_path:
+        plt.savefig(save_path, dpi=150, bbox_inches="tight")
+        print(f"Saved: {save_path}")
+    else:
+        plt.show()
+    plt.close()
+
+
+def plot_umap_by_year(
+    df: pd.DataFrame,
+    save_path: Optional[str] = None,
+) -> None:
+    """UMAP scatter plot with points colored by publication year.
+
+    Args:
+        df: DataFrame with umap_x, umap_y, year columns.
+        save_path: If provided, save figure to this path.
+    """
+    fig, ax = plt.subplots(figsize=(11, 7))
+
+    years = sorted(df["year"].unique())
+    palette = sns.color_palette("coolwarm", n_colors=len(years))
+    year_color = {y: palette[i] for i, y in enumerate(years)}
+
+    for year, group in df.groupby("year"):
+        ax.scatter(
+            group["umap_x"], group["umap_y"],
+            color=year_color[year], s=28,
+            alpha=0.8, linewidths=0, label=str(year),
+        )
+
+    ax.set_title("JMLR — UMAP projection colored by publication year", fontsize=14)
+    ax.set_xlabel("UMAP dimension 1")
+    ax.set_ylabel("UMAP dimension 2")
+    ax.legend(
+        title="Year", bbox_to_anchor=(1.01, 1),
+        loc="upper left", fontsize=9, frameon=False,
+    )
+    plt.tight_layout()
+
+    if save_path:
+        plt.savefig(save_path, dpi=150, bbox_inches="tight")
+        print(f"Saved: {save_path}")
+    else:
+        plt.show()
+    plt.close()
