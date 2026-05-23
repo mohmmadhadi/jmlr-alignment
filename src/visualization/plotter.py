@@ -219,3 +219,44 @@ def plot_topic_drift(
     else:
         plt.show()
     plt.close()
+
+def plot_topic_year_heatmap(
+    df: pd.DataFrame,
+    save_path: Optional[str] = None,
+) -> None:
+    """Heatmap of mean alignment score by topic and year.
+
+    Args:
+        df: DataFrame with topic_label, year, sbert_alignment_score columns.
+        save_path: If provided, save figure to this path.
+    """
+    pivot = (
+        df[df["topic_id"] != -1]
+        .groupby(["topic_label", "year"])["sbert_alignment_score"]
+        .mean()
+        .unstack(level="year")
+    )
+
+    fig, ax = plt.subplots(figsize=(13, 6))
+    sns.heatmap(
+        pivot,
+        ax=ax,
+        cmap="RdYlGn",
+        annot=True,
+        fmt=".2f",
+        linewidths=0.4,
+        linecolor="white",
+        cbar_kws={"label": "Mean SBERT alignment score", "shrink": 0.7},
+    )
+    ax.set_title("JMLR — Mean alignment score by topic and year", fontsize=13)
+    ax.set_xlabel("Year")
+    ax.set_ylabel("")
+    ax.tick_params(axis="y", labelsize=9)
+    plt.tight_layout()
+
+    if save_path:
+        plt.savefig(save_path, dpi=150, bbox_inches="tight")
+        print(f"Saved: {save_path}")
+    else:
+        plt.show()
+    plt.close()

@@ -25,6 +25,9 @@ def run(max_results: int = 500) -> None:
 
     processor = TextProcessor()
     processed_df = processor.process_records(records)
+    processed_df = processed_df[
+        ~processed_df["clean_abstract"].str.contains(r'\bjo\b', regex=True)
+    ]
     processed_df.to_csv("data/processed/jmlr_papers_clean.csv", index=False)
     print(f"Saved {len(processed_df)} processed records to data/processed/jmlr_papers_clean.csv")
 

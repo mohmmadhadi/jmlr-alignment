@@ -11,7 +11,7 @@ def run() -> None:
     abstracts = df["clean_abstract"].fillna("").tolist()
 
     print(f"Fitting BERTopic on {len(abstracts)} abstracts...")
-    model = JMLRTopicModel(n_topics=15, min_topic_size=10)
+    model = JMLRTopicModel(n_topics=20, min_topic_size=8)
     topic_info = model.fit(abstracts, embeddings)
 
     print("\nTopic overview:")
