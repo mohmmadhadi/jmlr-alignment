@@ -128,3 +128,94 @@ def plot_outliers(
     else:
         plt.show()
     plt.close()
+
+
+def plot_topic_distribution(
+    df: pd.DataFrame,
+    save_path: Optional[str] = None,
+) -> None:
+    """Bar chart of paper count per topic, colored by mean alignment score.
+
+    Args:
+        df: DataFrame with topic_id, topic_label, and sbert_alignment_score.
+        save_path: If provided, save figure to this path.
+    """
+    summary = (
+        df[df["topic_id"] != -1]
+        .groupby("topic_label")
+        .agg(n_papers=("title", "count"), mean_alignment=("sbert_alignment_score", "mean"))
+        .reset_index()
+        .sort_values("n_papers", ascending=True)
+    )
+
+    fig, ax = plt.subplots(figsize=(11, 6))
+    colors = plt.cm.RdYlGn(
+        (summary["mean_alignment"] - summary["mean_alignment"].min()) /
+        (summary["mean_alignment"].max() - summary["mean_alignment"].min())
+    )
+    bars = ax.barh(summary["topic_label"], summary["n_papers"], color=colors, edgecolor="white")
+    ax.set_xlabel("Number of papers")
+    ax.set_title("JMLR — Papers per topic (color = mean alignment score)", fontsize=13)
+
+    sm = plt.cm.ScalarMappable(
+        cmap="RdYlGn",
+        norm=plt.Normalize(summary["mean_alignment"].min(), summary["mean_alignment"].max()),
+    )
+    plt.colorbar(sm, ax=ax, label="Mean SBERT alignment score", shrink=0.6)
+    plt.tight_layout()
+
+    if save_path:
+        plt.savefig(save_path, dpi=150, bbox_inches="tight")
+        print(f"Saved: {save_path}")
+    else:
+        plt.show()
+    plt.close()
+
+
+def plot_topic_drift(
+    df: pd.DataFrame,
+    top_n_topics: int = 6,
+    save_path: Optional[str] = None,
+) -> None:
+    """Line chart of each topic's share of publications per year.
+
+    Args:
+        df: DataFrame with topic_label, year, and title columns.
+        top_n_topics: How many of the largest topics to plot.
+        save_path: If provided, save figure to this path.
+    """
+    top_topics = (
+        df[df["topic_id"] != -1]
+        .groupby("topic_label")["title"]
+        .count()
+        .nlargest(top_n_topics)
+        .index.tolist()
+    )
+
+    yearly = (
+        df[df["topic_label"].isin(top_topics)]
+        .groupby(["year", "topic_label"])["title"]
+        .count()
+        .reset_index(name="count")
+    )
+    totals = df.groupby("year")["title"].count().reset_index(name="total")
+    yearly = yearly.merge(totals, on="year")
+    yearly["share"] = yearly["count"] / yearly["total"]
+
+    fig, ax = plt.subplots(figsize=(12, 5))
+    for topic, group in yearly.groupby("topic_label"):
+        ax.plot(group["year"], group["share"], marker="o", linewidth=2, label=topic)
+
+    ax.set_title(f"JMLR — Publication share of top {top_n_topics} topics over time", fontsize=13)
+    ax.set_xlabel("Year")
+    ax.set_ylabel("Share of papers")
+    ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1, decimals=0))
+    ax.legend(bbox_to_anchor=(1.01, 1), loc="upper left", fontsize=9)
+    plt.tight_layout()
+
+    if save_path:
+        plt.savefig(save_path, dpi=150, bbox_inches="tight")
+        print(f"Saved: {save_path}")
+    else:
+        plt.show()
+    plt.close()
