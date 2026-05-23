@@ -6,7 +6,17 @@ from src.models.umap_projector import UMAPProjector
 def run() -> None:
     """Project SBERT embeddings to 2D and save coordinates to the dataset."""
 
-    df = pd.read_csv("data/processed/jmlr_papers_scored.csv")
+    df_scored = pd.read_csv("data/processed/jmlr_papers_scored.csv")
+    df_topics = pd.read_csv("data/processed/jmlr_papers_topics.csv")
+
+    df = df_scored.copy()
+    df["topic_id"] = df_topics["topic_id"]
+    df["topic_label"] = df_topics["topic_label"]
+
+    print("Columns available:", df.columns.tolist())
+    print(f"topic_id nulls: {df['topic_id'].isna().sum()}")
+    print(f"outlier_type nulls: {df['outlier_type'].isna().sum()}")
+
     embeddings = np.load("data/embeddings/sbert_abstracts.npy")
 
     projector = UMAPProjector(n_neighbors=15, min_dist=0.1, random_state=42)
@@ -14,7 +24,7 @@ def run() -> None:
     df = projector.attach_coordinates(df)
 
     df.to_csv("data/processed/jmlr_papers_umap.csv", index=False)
-    print(f"Saved UMAP coordinates to data/processed/jmlr_papers_umap.csv")
+    print(f"\nSaved to data/processed/jmlr_papers_umap.csv")
     print(f"x range: [{df['umap_x'].min():.2f}, {df['umap_x'].max():.2f}]")
     print(f"y range: [{df['umap_y'].min():.2f}, {df['umap_y'].max():.2f}]")
 
