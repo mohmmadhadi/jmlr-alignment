@@ -78,3 +78,4 @@ pytest tests/ -v
 | Semantic embedding | Sentence-BERT `all-MiniLM-L6-v2` |
 | Alignment metric | Cosine similarity |
 | Drift analysis | Year-over-year mean score with linear trend |
+| Projecting the embedding space |  UMAP Projection |
