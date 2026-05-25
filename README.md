@@ -19,7 +19,10 @@ jmlr-alignment/
 ├── tests/
 │   └── test_pipeline.py
 ├── reports/                     # Output figures
-└── data/                        # Local data (not tracked by git)
+├── data/                        # Local data (not tracked by git)
+├── run_all.py                    # running whole the pipeline
+├── Original Notebook              #notebook consisiting the whole pipeline (faltten version)
+└── PDF Report                     
 
 ## Setup
 
