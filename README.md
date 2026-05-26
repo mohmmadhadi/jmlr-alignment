@@ -51,6 +51,15 @@ python -m src.evaluation.run_evaluation
 # 4. Open the analysis notebook
 jupyter notebook notebooks/01_alignment_analysis.ipynb
 ```
+OR
+```bash
+# 1. Run the whole pipeline at once
+python -m run_all.py
+
+# 2. Open the analysis notebook
+jupyter notebook notebooks/01_alignment_analysis.ipynb
+```
+
 
 ## Running tests
 
@@ -61,8 +70,7 @@ pytest tests/ -v
 ## Key findings
 
 - **SBERT mean alignment score: 0.317** across 500 papers (2019–2026)
-- **Thematic drift detected**: slope of −0.009/year indicates gradual
-  broadening or dilution of JMLR's core ML focus over time
+- **Thematic drift detected**: slope of −0.0007/year indicates somehow stability of JMLR's core ML focus over time
 - **Outlier detection**: bottom 5% papers are clearly non-ML
   (physics, pure mathematics, materials science), likely arXiv
   cross-listing artifacts
