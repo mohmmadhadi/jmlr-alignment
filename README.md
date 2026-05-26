@@ -1,6 +1,4 @@
-Step 3 — Write the README
-Create README.md in the project root:
-markdown# JMLR Thematic Alignment Analysis
+# JMLR Thematic Alignment Analysis
 
 A pipeline to quantitatively assess whether papers published in the
 **Journal of Machine Learning Research (JMLR)** align with its stated
